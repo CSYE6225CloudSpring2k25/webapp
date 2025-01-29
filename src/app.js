@@ -6,7 +6,6 @@ const { sequelize } = require('./Entities');
 app.use(express.json());
 
 app.use('/healthz', healthzRoute);
-app.disable('x-powered-by');
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
@@ -21,4 +20,11 @@ sequelize
   .catch((err) => {
     console.error('Error connecting to the database:', err);
   });
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    console.error('Error:', 'Invalid JSON detected in the request body');
+    return res.status(400).send();
+  }
+  next(err);
+});
 

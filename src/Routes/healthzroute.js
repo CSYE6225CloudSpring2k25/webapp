@@ -3,7 +3,10 @@ const { HealthCheck } = require('../Entities');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  if (Object.keys(req.body).length !== 0) {
+  if (req.headers['content-length'] && parseInt(req.headers['content-length'], 10) > 0) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     return res.status(400).send();
   }
 
