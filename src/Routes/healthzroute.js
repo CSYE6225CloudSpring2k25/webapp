@@ -9,6 +9,12 @@ router.get('/', async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     return res.status(400).send();
   }
+  if (Object.keys(req.query).length > 0 || Object.keys(req.params).length > 0) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return res.status(400).send();
+  }
 
   try {
     const record = await HealthCheck.create({ datetime: new Date() });
