@@ -177,3 +177,170 @@ This will display all stored health check records.
 | `/healthz`         | `GET`  | Performs a health check               |
 
 
+# Running Unit Tests for Health Check API
+
+---
+
+## **📌 Prerequisites**
+
+Before running the tests, ensure you have the following installed:
+
+1. **Node.js** (v16 or higher) and npm
+2. **Jest** and **Supertest** for testing
+3. **A valid Express.js application with Sequelize ORM**
+
+---
+
+## **🚀 Step 1: Install Required Dependencies**
+
+Navigate to your project root directory and install Jest and Supertest:
+
+```bash
+npm install --save-dev jest supertest
+```
+
+This command installs Jest and Supertest as development dependencies.
+
+Ensure you have `sequelize` and `express` installed as well:
+
+```bash
+npm install sequelize express dotenv
+```
+
+---
+
+## \*\*🛠 Step 2: Configure Jest in \*\***`package.json`**
+
+Modify your `package.json` file to include Jest in the test script:
+
+```json
+"scripts": {
+  "test": "jest"
+}
+```
+
+Now, you can run tests using:
+
+```bash
+npm test
+```
+
+or explicitly:
+
+```bash
+npx jest
+```
+
+---
+
+## **🎯 Summary**
+
+| **Step**                     | **Command**                             |
+| ---------------------------- | --------------------------------------- |
+| **Install Jest & Supertest** | `npm install --save-dev jest supertest` |
+| **Run Tests**                | `npm test` or `npx jest`                |
+
+
+# **Project Setup and Deployment Guide on Digital Ocean**
+
+## **1. Logging into Your Digital Ocean VM**
+
+### **Using SSH (Secure Shell)**
+
+To connect to your Digital Ocean VM, open your terminal and run:
+
+```bash
+ssh -i ~/.ssh/digitalocean root@your_droplet_ip
+```
+
+- Replace `your_droplet_ip` with the actual IP address of your Digital Ocean droplet.
+- If you set up SSH keys, no password will be required.
+- If prompted, enter your root password.
+
+---
+
+## **2. Transferring Files to Digital Ocean VM**
+
+### **Using SCP (Secure Copy Protocol)**
+
+To send a file from your local machine to the Digital Ocean VM, use:
+
+```bash
+scp -i ~/.ssh/digitalocean (filename) root@your_droplet_ip:/destination/path/
+```
+
+For example, to send a script to the `/root/` directory:
+
+```bash
+scp -i ~/.ssh/digitalocean firstscript.sh root@your_droplet_ip:/destination/path/
+```
+
+---
+
+## **3. Running Files on Digital Ocean VM**
+
+### **Making Scripts Executable**
+
+After transferring files, log into your VM and navigate to the directory where the script is located:
+
+```bash
+cd /root/
+```
+
+Make the script executable:
+
+```bash
+chmod +x firstscript.sh
+```
+
+Run the script:
+
+```bash
+./firstscript.sh
+```
+
+---
+
+## **4. Common Debugging Commands**
+
+### **Checking MySQL Service Status**
+
+```bash
+sudo systemctl status mysql
+```
+
+### **Restarting MySQL Service**
+
+```bash
+sudo systemctl restart mysql
+```
+
+### **Checking Node.js Version**
+
+```bash
+node -v
+npm -v
+```
+
+### **Checking Running Processes**
+
+```bash
+ps aux | grep node
+```
+
+### **Stopping a Running Process (if necessary)**
+
+```bash
+kill -9 process_id
+```
+
+## (Replace `process_id` with the actual ID from `ps aux`.)
+
+## **8. Closing the SSH Session**
+
+To log out of your Digital Ocean VM, simply type:
+
+```bash
+exit
+```
+
