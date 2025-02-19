@@ -44,8 +44,6 @@ jobs:
 
       - name: Install Project Dependencies
         run: npm install
-        working-directory: webapp/src 
 
       - name: Run Tests
         run: npx jest
-        working-directory: webapp/src
