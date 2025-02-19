@@ -44,8 +44,8 @@ jobs:
 
       - name: Install Project Dependencies
         run: npm install
-        working-directory: webapp/src  # Change this if package.json is elsewhere
+        working-directory: webapp/src 
 
       - name: Run Tests
         run: npx jest
-        working-directory: webapp/src  # Change this if tests are elsewhere
+        working-directory: webapp/src
