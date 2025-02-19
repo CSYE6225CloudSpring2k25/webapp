@@ -1,9 +1,9 @@
-name: WEBAPP Test CI
+name: CI - Run Tests
 
 on:
   pull_request:
     branches:
-      - main 
+      - main
 
 jobs:
   test:
@@ -14,14 +14,14 @@ jobs:
       mysql:
         image: mysql:latest
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
-          MYSQL_USER: ${{ secrets.DB_USERNAME }}
-          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpassword
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=${{ secrets.DB_USERNAME }} --password=${{ secrets.DB_PASSWORD }}"
+          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=testuser --password=testpassword"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -33,15 +33,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.x 
+
+      - name: Install Node in VM
+        run: apt install npm
 
       - name: Install Dependencies
         run: npm install
 
       - name: Wait for MySQL to be Ready
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 --user=${{ secrets.DB_USERNAME }} --password=${{ secrets.DB_PASSWORD }} --silent; then
+          for i in {1..45}; do
+            if mysqladmin ping -h 127.0.0.1 --user=testuser --password=testpassword --silent; then
               echo "MySQL is ready"
               exit 0
             fi
@@ -51,19 +54,14 @@ jobs:
           echo "MySQL did not start in time" >&2
           exit 1
 
-      - name: Create .env File
-        run: |
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_HOST=127.0.0.1" >> .env 
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+      - name: Run Database Migrations (If Needed)
+        run: npm run migrate
 
       - name: Run Tests
         run: npx jest
         env:
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_HOST: 127.0.0.1
-          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_PORT: 3306
+          DB_USERNAME: testuser
+          DB_PASSWORD: testpassword
+          DB_NAME: testdb
