@@ -167,6 +167,8 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
+        working-directory: ./webapp/src  # Change this if package.json is in a different directory
 
       - name: Run Tests
         run: npx jest
+        working-directory: ./webapp/src  # Change this if your tests are also in a subdirectory
