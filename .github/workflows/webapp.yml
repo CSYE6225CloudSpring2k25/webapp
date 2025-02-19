@@ -37,19 +37,19 @@ jobs:
           sudo systemctl start mysql
           sudo systemctl enable mysql
 
-      # - name: Configure MySQL Database & User
-      #   run: |
-      #     echo "Creating database and user..."
-      #     sudo mysql --user=${{ secrets.DB_USERNAME }} --password=${{ secrets.DB_PASSWORD }} --execute="CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
-      
       - name: Configure MySQL Database & User
         run: |
           echo "Creating database and user..."
-          sudo mysql -u root --execute="
-            CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
-            CREATE USER IF NOT EXISTS '${{ secrets.DB_USERNAME }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
-            GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USERNAME }}'@'localhost';
-            FLUSH PRIVILEGES;"
+          sudo mysql --user=${{ secrets.DB_USERNAME }} --password=${{ secrets.DB_PASSWORD }} --execute="CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
+      
+      # - name: Configure MySQL Database & User
+      #   run: |
+      #     echo "Creating database and user..."
+      #     sudo mysql -u root --execute="
+      #       CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
+      #       CREATE USER IF NOT EXISTS '${{ secrets.DB_USERNAME }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
+      #       GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USERNAME }}'@'localhost';
+      #       FLUSH PRIVILEGES;"
 
       - name: Create .env File
         run: |
@@ -66,10 +66,6 @@ jobs:
       - name: Install Project Dependencies
         run: npm install
         working-directory: src
-      
-      - name: Start MySQL
-        run: sudo systemctl start mysql
-            sudo systemctl enable mysql
 
       - name: Run Tests
         run: npx jest
