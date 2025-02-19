@@ -1,66 +1,38 @@
-name: WebApp Unit Testing
+name: CI Workflow testing
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [pull_request]
 
 jobs:
-  run-tests:
-    name: Run Unit Tests
+  run-integration-tests:
     runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
-        ports:
-          - 3306:3306
-
+    env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Update and Install Dependencies
-        run: sudo apt update && sudo apt install -y mysql-client
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
 
-      - name: Create `.env` File
+      - name: Install MySQL
         run: |
-          cat <<EOF > WEBAPP/src/.env
-          NODE_ENV=ci
-          DB_HOST=${{ secrets.DB_HOST }}
-          DB_PORT=${{ secrets.DB_PORT }}
-          DB_USERNAME=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=${{ secrets.DB_NAME }}
-          PORT=${{ secrets.PORT }}
-          EOF
+          sudo apt-get update
+          sudo apt-get install -y mysql-server
+          sudo /etc/init.d/mysql start
+          sudo systemctl enable mysql
+          sudo systemctl status mysql
 
-      - name: Install Node.js Dependencies
+      - name: Configure MySQL
+        run: |
+          sudo mysql --user=${{ secrets.DB_USERNAME }} --password=${{ secrets.DB_PASSWORD }} --execute="CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
+
+      - name: Install Dependencies
         run: npm install
-        working-directory: WEBAPP/src
-
-      - name: Wait for MySQL to Be Ready
-        run: |
-          echo "Waiting for MySQL to start..."
-          for i in {30..0}; do
-            if nc -z 127.0.0.1 3306; then
-              echo "MySQL is up!"
-              break
-            fi
-            echo "Still waiting for MySQL..."
-            sleep 2
-          done
-          if [ "$i" = 0 ]; then
-            echo "ERROR: MySQL failed to start"
-            exit 1
-          fi
 
       - name: Run Tests
         run: npx jest
-        working-directory: WEBAPP/src
