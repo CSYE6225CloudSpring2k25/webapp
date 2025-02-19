@@ -27,26 +27,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Update and Install Dependencies
-        run: sudo apt update && sudo apt upgrade -y
-
-      - name: Wait for MySQL to Be Ready
-        run: |
-          for i in {30..0}; do
-            if mysqladmin ping -h 127.0.0.1 -uroot -p"${{ secrets.DB_PASSWORD }}" --silent; then
-              echo "MySQL is up and running"
-              break
-            fi
-            echo "Waiting for MySQL..."
-            sleep 2
-          done
-          if [ "$i" = 0 ]; then
-            echo "ERROR: MySQL failed to start"
-            exit 1
-          fi
+        run: sudo apt update && sudo apt install -y mysql-client
 
       - name: Create `.env` File
         run: |
-          cat <<EOF > .env
+          cat <<EOF > webapp/src/.env
+          NODE_ENV=ci
           DB_HOST=${{ secrets.DB_HOST }}
           DB_PORT=${{ secrets.DB_PORT }}
           DB_USERNAME=${{ secrets.DB_USERNAME }}
@@ -55,8 +41,26 @@ jobs:
           PORT=${{ secrets.PORT }}
           EOF
 
-      - name: Install Project Dependencies
+      - name: Install Node.js Dependencies
         run: npm install
+        working-directory: webapp/src
+
+      - name: Wait for MySQL to Be Ready
+        run: |
+          echo "Waiting for MySQL to start..."
+          for i in {30..0}; do
+            if nc -z 127.0.0.1 3306; then
+              echo "MySQL is up!"
+              break
+            fi
+            echo "Still waiting for MySQL..."
+            sleep 2
+          done
+          if [ "$i" = 0 ]; then
+            echo "ERROR: MySQL failed to start"
+            exit 1
+          fi
 
       - name: Run Tests
         run: npx jest
+        working-directory: webapp/src
