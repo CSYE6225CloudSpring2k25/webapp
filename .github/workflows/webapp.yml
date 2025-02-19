@@ -10,6 +10,22 @@ jobs:
     name: Run Jest Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_USER: root
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -19,22 +35,20 @@ jobs:
         with:
           node-version: 20
 
-      - name: Start MySQL
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Debug MySQL Logs (Before Waiting)
         run: |
-          docker run -d \
-            --name mysql-test \
-            -e MYSQL_ROOT_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -e MYSQL_DATABASE=${{ secrets.DB_NAME }} \
-            -e MYSQL_USER=${{ secrets.DB_USERNAME }} \
-            -e MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -p 3306:3306 \
-            mysql:latest
+          echo "Checking MySQL logs before waiting..."
+          docker ps
+          docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
 
       - name: Wait for MySQL to be Ready
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 --user=${{ secrets.DB_USERNAME }} --password=${{ secrets.DB_PASSWORD }} --silent; then
-              echo "MySQL is ready"
+          for i in {1..45}; do  # Increased retries to 45 (up to ~90s)
+            if mysqladmin ping -h 127.0.0.1 -u root -p${{ secrets.DB_PASSWORD }} --silent; then
+              echo "MySQL is ready!"
               exit 0
             fi
             echo "Waiting for MySQL..."
@@ -43,22 +57,26 @@ jobs:
           echo "MySQL did not start in time" >&2
           exit 1
 
+      - name: Debug MySQL Logs (After Failure)
+        if: failure()
+        run: |
+          echo "Checking MySQL logs after failure..."
+          docker ps
+          docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
+
       - name: Create .env File
         run: |
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_USERNAME=root" >> .env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
           echo "DB_HOST=127.0.0.1" >> .env 
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
-
-      - name: Install Dependencies
-        run: npm install
+          echo "DB_PORT=3306" >> .env
 
       - name: Run Tests
         run: npx jest
         env:
           DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_USERNAME: root
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_HOST: 127.0.0.1
-          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_PORT: 3306
