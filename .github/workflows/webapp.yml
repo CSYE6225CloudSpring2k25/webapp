@@ -6,11 +6,12 @@ jobs:
   run-integration-tests:
     runs-on: ubuntu-latest
     env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -24,16 +25,22 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y mysql-server
-          sudo /etc/init.d/mysql start
-          sudo systemctl enable mysql
-          sudo systemctl status mysql
+          sudo systemctl start mysql
+          sudo mysql -e "ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_PASSWORD }}';"
+          sudo mysql -e "FLUSH PRIVILEGES;"
 
       - name: Configure MySQL
         run: |
-          sudo mysql --user=${{ secrets.DB_USERNAME }} --password=${{ secrets.DB_PASSWORD }} --execute="CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
+          sudo mysql --user=root --password=${{ secrets.DB_PASSWORD }} --host=127.0.0.1 --execute="
+          CREATE USER IF NOT EXISTS '${{ secrets.DB_USERNAME }}'@'127.0.0.1' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
+          GRANT ALL PRIVILEGES ON *.* TO '${{ secrets.DB_USERNAME }}'@'127.0.0.1';
+          CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
+          FLUSH PRIVILEGES;"
 
       - name: Install Dependencies
         run: npm install
+        working-directory: webapp/src  # Change this if your package.json is elsewhere
 
       - name: Run Tests
         run: npx jest
+        working-directory: webapp/src  # Change this if tests are elsewhere
