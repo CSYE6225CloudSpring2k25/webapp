@@ -1,4 +1,4 @@
-name: CI Workflow testing
+name: CI Workflow Testing
 
 on: [pull_request]
 
@@ -13,7 +13,7 @@ jobs:
       DB_NAME: ${{ secrets.DB_NAME }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
 
       - name: Set up Node.js
@@ -21,25 +21,46 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Remove Existing MySQL (If Any)
+        run: |
+          echo "Removing any existing MySQL installation..."
+          sudo apt-get remove --purge mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-* -y || true
+          sudo rm -rf /etc/mysql /var/lib/mysql /var/log/mysql
+          sudo apt autoremove -y
+          sudo apt autoclean -y
+
       - name: Install MySQL
         run: |
+          echo "Installing MySQL Server..."
           sudo apt-get update
           sudo apt-get install -y mysql-server
           sudo systemctl start mysql
-          sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_PASSWORD }}';"
-          sudo mysql -e "FLUSH PRIVILEGES;"
+          sudo systemctl enable mysql
 
-      - name: Configure MySQL
+      - name: Secure MySQL Installation & Set Root Password
         run: |
-          sudo mysql --user=root --password=${{ secrets.DB_PASSWORD }} --host=localhost --execute="
-          CREATE USER IF NOT EXISTS '${{ secrets.DB_USERNAME }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
-          GRANT ALL PRIVILEGES ON *.* TO '${{ secrets.DB_USERNAME }}'@'localhost';
-          CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
-          FLUSH PRIVILEGES;"
+          echo "Configuring MySQL..."
+          sudo mysql --user=root <<EOF
+          ALTER USER 'root'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_PASSWORD }}';
+          DELETE FROM mysql.user WHERE User='';
+          DROP DATABASE IF EXISTS test;
+          DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+          FLUSH PRIVILEGES;
+          EOF
 
-      - name: Install Dependencies
+      - name: Configure MySQL Database & User
+        run: |
+          echo "Creating database and user..."
+          sudo mysql --user=root --password=${{ secrets.DB_PASSWORD }} --host=127.0.0.1 <<EOF
+          CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
+          CREATE USER IF NOT EXISTS '${{ secrets.DB_USERNAME }}'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_PASSWORD }}';
+          GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USERNAME }}'@'127.0.0.1';
+          FLUSH PRIVILEGES;
+          EOF
+
+      - name: Install Project Dependencies
         run: npm install
-        working-directory: webapp/src  # Change this if your package.json is elsewhere
+        working-directory: webapp/src  # Change this if package.json is elsewhere
 
       - name: Run Tests
         run: npx jest
