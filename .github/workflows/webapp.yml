@@ -45,7 +45,7 @@ jobs:
       - name: Configure MySQL Database & User
         run: |
           echo "Creating database and user..."
-          sudo mysql -u ${{ secrets.DB_USERNAME }} -p ${{ secrets.DB_PASSWORD }} --execute="
+          sudo mysql -u root --execute="
             CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
             CREATE USER IF NOT EXISTS '${{ secrets.DB_USERNAME }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
             GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USERNAME }}'@'localhost';
