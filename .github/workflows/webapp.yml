@@ -1,99 +1,13 @@
-# name: WEBAPP Test CI
-
-# on:
-#   pull_request:
-#     branches:
-#       - main 
-
-# jobs:
-#   test:
-#     name: Run Jest Tests
-#     runs-on: ubuntu-latest
-
-#     services:
-#       mysql:
-#         image: mysql:8.0
-#         env:
-#           MYSQL_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
-#           MYSQL_DATABASE: ${{ secrets.DB_NAME }}
-#           MYSQL_USER: root
-#           MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
-#         ports:
-#           - 3306:3306
-#         options: >-
-#           --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
-#           --health-interval=10s
-#           --health-timeout=5s
-#           --health-retries=15
-
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v4
-
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: 20
-
-#       - name: Install Dependencies
-#         run: npm install
-
-#       - name: Debug MySQL Logs (Before Waiting)
-#         run: |
-#           echo "Checking MySQL logs before waiting..."
-#           docker ps
-#           docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
-
-#       - name: Wait for MySQL to be Ready
-#         run: |
-#           for i in {1..45}; do  # Increased retries to 45 (up to ~90s)
-#             if mysqladmin ping -h 127.0.0.1 -u root -p${{ secrets.DB_PASSWORD }} --silent; then
-#               echo "MySQL is ready!"
-#               exit 0
-#             fi
-#             echo "Waiting for MySQL..."
-#             sleep 2
-#           done
-#           echo "MySQL did not start in time" >&2
-#           exit 1
-
-#       - name: Debug MySQL Logs (After Failure)
-#         if: failure()
-#         run: |
-#           echo "Checking MySQL logs after failure..."
-#           docker ps
-#           docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
-
-#       - name: Create .env File
-#         run: |
-#           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-#           echo "DB_USERNAME=root" >> .env
-#           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-#           echo "DB_HOST=127.0.0.1" >> .env 
-#           echo "DB_PORT=3306" >> .env
-
-#       - name: Run Tests
-#         run: npx jest
-#         env:
-#           DB_NAME: ${{ secrets.DB_NAME }}
-#           DB_USERNAME: root
-#           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-#           DB_HOST: 127.0.0.1
-#           DB_PORT: 3306
-
-name: WebApp Unit Testing
+name: WEBAPP Test CI
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
-      - main
+      - main 
 
 jobs:
-  run-tests:
-    name: Run Unit Tests
+  test:
+    name: Run Jest Tests
     runs-on: ubuntu-latest
 
     services:
@@ -102,44 +16,130 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
           MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_USER: root
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
         ports:
           - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Update and Install Dependencies
-        run: sudo apt update && sudo apt upgrade -y
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Wait for MySQL to Be Ready
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Debug MySQL Logs (Before Waiting)
         run: |
-          for i in {30..0}; do
-            if mysql -h 127.0.0.1 -u root -p"${{ secrets.DB_PASSWORD }}" --silent; then
-              echo "MySQL is up and running"
-              break
+          echo "Checking MySQL logs before waiting..."
+          docker ps
+          docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
+
+      - name: Wait for MySQL to be Ready
+        run: |
+          for i in {1..45}; do  # Increased retries to 45 (up to ~90s)
+            if mysql ping -h 127.0.0.1 -u root -p ${{ secrets.DB_PASSWORD }} --silent; then
+              echo "MySQL is ready!"
+              exit 0
             fi
             echo "Waiting for MySQL..."
             sleep 2
           done
-          if [ "$i" = 0 ]; then
-            echo "ERROR: MySQL failed to start"
-            exit 1
-          fi
+          echo "MySQL did not start in time" >&2
+          exit 1
 
-      - name: Create `.env` File
+      - name: Debug MySQL Logs (After Failure)
+        if: failure()
         run: |
-          cat <<EOF > .env
-          DB_HOST=${{ secrets.DB_HOST }}
-          DB_PORT=${{ secrets.DB_PORT }}
-          DB_USERNAME=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=${{ secrets.DB_NAME }}
-          PORT=${{ secrets.PORT }}
-          EOF
+          echo "Checking MySQL logs after failure..."
+          docker ps
+          docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
 
-      - name: Install Project Dependencies
-        run: npm install
+      - name: Create .env File
+        run: |
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "DB_USERNAME=root" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env 
+          echo "DB_PORT=3306" >> .env
 
       - name: Run Tests
         run: npx jest
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USERNAME: root
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+
+# name: WebApp Unit Testing
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
+
+# jobs:
+#   run-tests:
+#     name: Run Unit Tests
+#     runs-on: ubuntu-latest
+
+#     services:
+#       mysql:
+#         image: mysql:8.0
+#         env:
+#           MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#           MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+#         ports:
+#           - 3306:3306
+
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v4
+
+#       - name: Update and Install Dependencies
+#         run: sudo apt update && sudo apt upgrade -y
+
+#       - name: Wait for MySQL to Be Ready
+#         run: |
+#           for i in {30..0}; do
+#             if mysql -h 127.0.0.1 -u root -p"${{ secrets.DB_PASSWORD }}" --silent; then
+#               echo "MySQL is up and running"
+#               break
+#             fi
+#             echo "Waiting for MySQL..."
+#             sleep 2
+#           done
+#           if [ "$i" = 0 ]; then
+#             echo "ERROR: MySQL failed to start"
+#             exit 1
+#           fi
+
+#       - name: Create `.env` File
+#         run: |
+#           cat <<EOF > .env
+#           DB_HOST=${{ secrets.DB_HOST }}
+#           DB_PORT=${{ secrets.DB_PORT }}
+#           DB_USERNAME=${{ secrets.DB_USERNAME }}
+#           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+#           DB_NAME=${{ secrets.DB_NAME }}
+#           PORT=${{ secrets.PORT }}
+#           EOF
+
+#       - name: Install Project Dependencies
+#         run: npm install
+
+#       - name: Run Tests
+#         run: npx jest
