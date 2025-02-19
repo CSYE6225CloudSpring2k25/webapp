@@ -1,0 +1,49 @@
+name: CI Workflow Testing
+
+on: [pull_request]
+
+jobs:
+  run-integration-tests:
+    runs-on: ubuntu-latest
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+
+      - name: Remove Existing MySQL (If Any)
+        run: |
+          echo "Removing any existing MySQL installation..."
+          sudo apt-get remove --purge mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-* -y || true
+          sudo rm -rf /etc/mysql /var/lib/mysql /var/log/mysql
+          sudo apt autoremove -y
+          sudo apt autoclean -y
+
+      - name: Install MySQL
+        run: |
+          echo "Installing MySQL Server..."
+          sudo apt-get update
+          sudo apt-get install -y mysql-server
+          sudo systemctl start mysql
+          sudo systemctl enable mysql
+
+      - name: Configure MySQL Database & User
+        run: |
+          echo "Creating database and user..."
+          sudo mysql --user=${{ secrets.DB_USERNAME }} --password=${{ secrets.DB_PASSWORD }} --execute="CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
+
+      - name: Install Project Dependencies
+        run: npm install
+
+      - name: Run Tests
+        run: npx jest
