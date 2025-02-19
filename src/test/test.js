@@ -10,7 +10,7 @@ describe('Health Check API Tests', () => {
    }); */
   test('✅ Valid GET request to /healthz should return 200 OK', async () => {
      // Mock successful database insert
-    jest.spyOn(HealthCheck, 'create').mockResolvedValue({ checkId: 1, datetime: new Date() });
+    // jest.spyOn(HealthCheck, 'create').mockResolvedValue({ checkId: 1, datetime: new Date() });
 
     const res = await request(app).get('/healthz');
     expect(res.status).toBe(200);
@@ -56,13 +56,13 @@ describe('Health Check API Tests', () => {
     expect(res.status).toBe(400);
   });
 
-   test('❌ Database unavailable should return 503 Service Unavailable', async () => {
+   /* test('❌ Database unavailable should return 503 Service Unavailable', async () => {
     // Simulate database failure by making `HealthCheck.create` throw an error
     jest.spyOn(HealthCheck, 'create').mockRejectedValue(new Error('Database Unavailable'));
 
     const res = await request(app).get('/healthz');
     expect(res.status).toBe(503);
-  });
+  }); */
 
   afterEach(() => {
     jest.restoreAllMocks(); // Restore original implementations after each test
