@@ -1,85 +1,85 @@
-name: WEBAPP Test CI
+# name: WEBAPP Test CI
 
-on:
-  pull_request:
-    branches:
-      - main 
+# on:
+#   pull_request:
+#     branches:
+#       - main 
 
-jobs:
-  test:
-    name: Run Jest Tests
-    runs-on: ubuntu-latest
+# jobs:
+#   test:
+#     name: Run Jest Tests
+#     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
-          MYSQL_USER: user1
-          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=15
+#     services:
+#       mysql:
+#         image: mysql:latest
+#         env:
+#           MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#           MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+#           MYSQL_USER: user1
+#           MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#         ports:
+#           - 3306:3306
+#         options: >-
+#           --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+#           --health-interval=10s
+#           --health-timeout=5s
+#           --health-retries=15
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: 20
 
-      - name: Install Dependencies
-        run: npm install
+#       - name: Install Dependencies
+#         run: npm install
 
-      - name: Debug MySQL Logs (Before Waiting)
-        run: |
-          echo "Checking MySQL logs before waiting..."
-          docker ps
-          docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
+#       - name: Debug MySQL Logs (Before Waiting)
+#         run: |
+#           echo "Checking MySQL logs before waiting..."
+#           docker ps
+#           docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
 
-      - name: Wait for MySQL to be Ready
-        run: |
-          for i in {1..45}; do  # Increased retries to 45 (up to ~90s)
-            if mysql ping -h 127.0.0.1 -u root -p ${{ secrets.DB_PASSWORD }} --silent; then
-              echo "MySQL is ready!"
-              exit 0
-            fi
-            echo "Waiting for MySQL..."
-            sleep 2
-          done
-          echo "MySQL did not start in time" >&2
-          exit 1
+#       - name: Wait for MySQL to be Ready
+#         run: |
+#           for i in {1..45}; do  # Increased retries to 45 (up to ~90s)
+#             if mysql ping -h 127.0.0.1 -u root -p ${{ secrets.DB_PASSWORD }} --silent; then
+#               echo "MySQL is ready!"
+#               exit 0
+#             fi
+#             echo "Waiting for MySQL..."
+#             sleep 2
+#           done
+#           echo "MySQL did not start in time" >&2
+#           exit 1
 
-      - name: Debug MySQL Logs (After Failure)
-        if: failure()
-        run: |
-          echo "Checking MySQL logs after failure..."
-          docker ps
-          docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
+#       - name: Debug MySQL Logs (After Failure)
+#         if: failure()
+#         run: |
+#           echo "Checking MySQL logs after failure..."
+#           docker ps
+#           docker logs $(docker ps -q --filter ancestor=mysql:latest) || echo "No logs available"
 
-      - name: Create .env File
-        run: |
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_USERNAME=user1" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_HOST=127.0.0.1" >> .env 
-          echo "DB_PORT=3306" >> .env
+#       - name: Create .env File
+#         run: |
+#           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+#           echo "DB_USERNAME=user1" >> .env
+#           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+#           echo "DB_HOST=127.0.0.1" >> .env 
+#           echo "DB_PORT=3306" >> .env
 
-      - name: Run Tests
-        run: npx jest
-        env:
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USERNAME: user1
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
+#       - name: Run Tests
+#         run: npx jest
+#         env:
+#           DB_NAME: ${{ secrets.DB_NAME }}
+#           DB_USERNAME: user1
+#           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#           DB_HOST: 127.0.0.1
+#           DB_PORT: 3306
 
 # name: WebApp Unit Testing
 
@@ -143,3 +143,68 @@ jobs:
 
 #       - name: Run Tests
 #         run: npx jest
+
+name: Continuous Integration Test Workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Continuous Integration Test
+    runs-on: ubuntu-latest
+    environment: dev
+
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_USER: ${{ secrets.DB_USERNAME }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Configure Environment Variables
+        run: |
+          echo DB_USERNAME=${{ secrets.DB_USERNAME }}
+          echo DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          echo DB_NAME=${{ secrets.DB_NAME }}
+          echo DB_HOST=${{ secrets.DB_HOST }}
+          echo PORT=${{ secrets.PORT }}
+      
+      - name: Wait for MySQL to be ready
+        run: |
+          until mysqladmin ping -h "127.0.0.1" --silent; do
+            echo "Waiting for MySQL to be ready..."
+            sleep 5
+          done
+
+      - name: Run Tests
+        run: npm test -- --forceExit
+        env:
+          PORT: ${{ secrets.PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_HOST: ${{ secrets.DB_HOST }}
