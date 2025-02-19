@@ -12,11 +12,11 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:latest
         env:
           MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
           MYSQL_DATABASE: ${{ secrets.DB_NAME }}
-          MYSQL_USER: root
+          MYSQL_USER: user1
           MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
         ports:
           - 3306:3306
@@ -67,7 +67,7 @@ jobs:
       - name: Create .env File
         run: |
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_USERNAME=root" >> .env
+          echo "DB_USERNAME=user1" >> .env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
           echo "DB_HOST=127.0.0.1" >> .env 
           echo "DB_PORT=3306" >> .env
@@ -76,7 +76,7 @@ jobs:
         run: npx jest
         env:
           DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USERNAME: root
+          DB_USERNAME: user1
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
