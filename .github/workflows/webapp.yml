@@ -144,66 +144,29 @@
 #       - name: Run Tests
 #         run: npx jest
 
-name: Continuous Integration Test Workflow
+name: CI - Run Tests
 
 on:
   pull_request:
     branches:
-      - main
+      - main  # Change this if your default branch is different
 
 jobs:
-  build:
-    name: Continuous Integration Test
+  test:
+    name: Run Jest Tests
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
-          MYSQL_USER: ${{ secrets.DB_USERNAME }}
-          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: 20  # Match your Node.js version
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Configure Environment Variables
-        run: |
-          echo DB_USERNAME=${{ secrets.DB_USERNAME }}
-          echo DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          echo DB_NAME=${{ secrets.DB_NAME }}
-          echo DB_HOST=${{ secrets.DB_HOST }}
-          echo PORT=${{ secrets.PORT }}
-      
-      - name: Wait for MySQL to be ready
-        run: |
-          until mysqladmin ping -h "127.0.0.1" --silent; do
-            echo "Waiting for MySQL to be ready..."
-            sleep 5
-          done
-
       - name: Run Tests
-        run: npm test -- --forceExit
-        env:
-          PORT: ${{ secrets.PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_HOST: ${{ secrets.DB_HOST }}
+        run: npx jest
