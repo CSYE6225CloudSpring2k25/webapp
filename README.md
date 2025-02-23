@@ -344,3 +344,4 @@ To log out of your Digital Ocean VM, simply type:
 exit
 ```
 
+testCI
