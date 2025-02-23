@@ -3,6 +3,17 @@ const app = require('../app'); // Ensure the correct path to your Express app
 const { HealthCheck, sequelize } = require('../Entities');
 
 describe('Health Check API Tests', () => {
+
+  beforeAll(async () => {
+    try {
+      await sequelize.authenticate();
+      await sequelize.sync({force: false});
+      console.log("Connection Established successfully.");
+    } catch (error) {
+      console.error("unable to connect to database");
+      throw error;
+    }
+  });
   
    /* test('✅ Valid GET request to /healthz should return 200 OK', async () => {
      const res = await request(app).get('/healthz');
