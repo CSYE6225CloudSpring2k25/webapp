@@ -67,6 +67,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Initialize Packer Plugins
+        run: packer init -upgrade packer/
+
       - name: Build Custom Image
         run: |
           packer build \
