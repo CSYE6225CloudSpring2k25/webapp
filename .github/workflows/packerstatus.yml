@@ -1,0 +1,20 @@
+name: Packer Status Check
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v2
+      - name: Packer Format Check
+        run: packer fmt -check -diff -recursive packer/
+      - name: Packer Validate
+        run: |
+          packer validate \
+            -var "db_password=${{ secrets.DB_PASSWORD }}" \
+            -var "ami_users=${{ secrets.AMI_USERS }}" \
+            packer/
