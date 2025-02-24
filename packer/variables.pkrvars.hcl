@@ -1,0 +1,10 @@
+aws_region    = "us-east-1"
+instance_type = "t2.micro"
+project_name  = "csye6225"
+DB_PASSWORD   = "root"
+DB_NAME       = "HealthChecks"
+DB_USERNAME   = "root"
+app_port      = "8080"
+ami_users     = ["222634376924"] # Replace with your DEMO AWS account ID
+ssh_username  = "ubuntu"
+source_ami    = "ami-04b4f1a9cf54c11d0"
