@@ -35,7 +35,7 @@ variable "app_port" {
 }
 
 variable "ami_users" {
-  type = list(string)
+  type    = list(string)
   default = ["222634376924"]
 }
 
