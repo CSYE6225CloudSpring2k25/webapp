@@ -15,6 +15,6 @@ jobs:
       - name: Packer Validate
         run: |
           packer validate \
-            -var "db_password=${{ secrets.DB_PASSWORD }}" \
+            -var "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
             -var "ami_users=${{ secrets.AMI_USERS }}" \
             packer/
