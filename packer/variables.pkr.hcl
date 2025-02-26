@@ -58,5 +58,5 @@ variable "gcp_zone" {
 }
 
 variable "credentials_file" {
-  default = "csye6225.json"
+  description = "GCP Service Account Credentials"
 }
