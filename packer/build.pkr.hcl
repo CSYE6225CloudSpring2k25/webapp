@@ -1,5 +1,5 @@
 build {
-  sources = ["source.amazon-ebs.ubuntu"] # Add "source.googlecompute.ubuntu" if using GCP
+  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.ubuntu"] # Add "source.googlecompute.ubuntu" if using GCP
 
   # Copying the src/ directory to the instance
   provisioner "file" {

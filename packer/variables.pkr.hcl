@@ -35,8 +35,8 @@ variable "app_port" {
 }
 
 variable "ami_users" {
-  type    = list(string)
-  default = ["222634376924"]
+  type        = list(string)
+  description = "List of AWS account IDs to share the AMI with"
 }
 
 variable "source_ami" {
@@ -47,4 +47,16 @@ variable "source_ami" {
 variable "ssh_username" {
   type    = string
   default = "ubuntu"
+}
+
+variable "gcp_project_id" {
+  default = "csye6225-452007"
+}
+
+variable "gcp_zone" {
+  default = "us-east1-d"
+}
+
+variable "credentials_file" {
+  default = "csye6225.json"
 }
