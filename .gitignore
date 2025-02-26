@@ -130,3 +130,4 @@ dist
 .pnp.*
 
 packer/variables.pkrvars.hcl
+csye6225.json

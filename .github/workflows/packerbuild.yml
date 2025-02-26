@@ -1,0 +1,91 @@
+name: Packer Build
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Enable mysql service
+        run: sudo systemctl start mysql
+
+      - name: Create .env File
+        run: |
+          echo "DB_NAME=${{ secrets.DB_NAME }}" > src/.env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> src/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> src/.env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> src/.env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> src/.env
+
+      - name: Install Project Dependencies
+        run: npm install
+        working-directory: src
+
+      - name: Wait for MySQL to be Ready
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Initialize MySQL Database as Root
+        run: |
+          sudo mysql -u"${{ secrets.DB_USERNAME }}" --password="${{ secrets.DB_PASSWORD }}" <<EOF
+          CREATE DATABASE IF NOT EXISTS \`${{ secrets.DB_NAME }}\`;
+          EOF
+
+      - name: Run Tests
+        run: npx jest
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+        working-directory: src
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v2
+        
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
+
+      - name: Create JSON File from Secret
+        run: |
+          echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' | jq '.' > secret.json
+
+
+      - name: Initialize Packer Plugins
+        run: packer init -upgrade packer/
+
+      - name: Build Custom Image
+        run: |
+          packer build \
+            -var "aws_region=${{ secrets.AWS_REGION }}" \
+            -var "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            -var "instance_type=t2.micro" \
+            -var "ami_users=[\"${{ secrets.AMI_USERS }}\"]" \
+            -var "credentials_file=secret.json" \
+            packer/
