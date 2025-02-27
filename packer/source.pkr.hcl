@@ -22,20 +22,20 @@ source "amazon-ebs" "ubuntu" {
 
 source "googlecompute" "ubuntu" {
   project_id              = var.gcp_project_id
-  source_image            = "ubuntu-2404-noble-amd64-v20250214"
-  source_image_family     = "ubuntu-2404-noble-amd64"
+  source_image            = var.gcp_source_image
+  source_image_family     = var.gcp_source_image_family
   credentials_file        = var.credentials_file
   zone                    = var.gcp_zone
-  machine_type            = "n1-standard-1"
-  disk_size               = 10
-  disk_type               = "pd-standard"
-  network                 = "default"
+  machine_type            = var.gcp_machine_type
+  disk_size               = var.gcp_disk_size
+  disk_type               = var.gcp_disk_type
+  network                 = var.gcp_network
   tags                    = ["csye6225"]
   image_project_id        = var.gcp_project_id
-  image_description       = "Custom Ubuntu 20.04 server image"
+  image_description       = var.gcp_image_description
   image_storage_locations = ["us"]
-  image_name              = "learn-packer-linux-gcp"
-  image_family            = "my-custom-ami"
+  image_name              = var.gcp_image_name
+  image_family            = var.gcp_image_family
   ssh_username            = var.ssh_username
 }
 
