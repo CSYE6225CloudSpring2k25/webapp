@@ -12,9 +12,9 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name = "${var.project_name}-ami-{{timestamp}}"
+  ami_name      = "${var.project_name}-ami-{{timestamp}}"
   instance_type = var.instance_type
-  region               = var.aws_region
+  region        = var.aws_region
   source_ami    = var.source_ami
   ssh_username  = var.ssh_username
   ami_users     = var.ami_users
