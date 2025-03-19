@@ -1,13 +1,13 @@
 name: Packer Build
 on:
   pull_request:
-    types:
-      - closed
+    # types:
+    #   - closed
     branches:
       - main
 jobs:
   build:
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -70,14 +70,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Authenticate with Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
+      # - name: Authenticate with Google Cloud
+      #   uses: google-github-actions/auth@v2
+      #   with:
+      #     credentials_json: "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
 
-      - name: Create JSON File from Secret
-        run: |
-          echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' | jq '.' > secret.json
+      # - name: Create JSON File from Secret
+      #   run: |
+      #     echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' | jq '.' > secret.json
 
 
       - name: Initialize Packer Plugins
@@ -90,18 +90,17 @@ jobs:
             -var "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
             -var "instance_type=t2.micro" \
             -var "ami_users=[\"${{ secrets.AMI_USERS }}\"]" \
-            -var "credentials_file=secret.json" \
             packer/
             
-      - name: Copy GCP Image to Demo Project
-        env:
-          GCP_ACCOUNT_ID: ${{ secrets.GCP_ACCOUNT_ID }}
-          DEMO_GCP_ACCOUNT_ID: ${{ secrets.DEMO_GCP_ACCOUNT_ID }}
-          IMAGE_NAME: ${{ secrets.GCP_IMAGE_NAME }}  
-        run: |
-          echo "Copying image from DEV ($GCP_ACCOUNT_ID) to DEMO ($DEMO_GCP_ACCOUNT_ID)..."
-          gcloud compute images create "webapp-$(date +%s)" \
-            --source-image="$IMAGE_NAME" \
-            --source-image-project="$GCP_ACCOUNT_ID" \
-            --project="$DEMO_GCP_ACCOUNT_ID" \
-            --description="Copied from DEV on $(date)"
+      # - name: Copy GCP Image to Demo Project
+      #   env:
+      #     GCP_ACCOUNT_ID: ${{ secrets.GCP_ACCOUNT_ID }}
+      #     DEMO_GCP_ACCOUNT_ID: ${{ secrets.DEMO_GCP_ACCOUNT_ID }}
+      #     IMAGE_NAME: ${{ secrets.GCP_IMAGE_NAME }}  
+      #   run: |
+      #     echo "Copying image from DEV ($GCP_ACCOUNT_ID) to DEMO ($DEMO_GCP_ACCOUNT_ID)..."
+      #     gcloud compute images create "webapp-$(date +%s)" \
+      #       --source-image="$IMAGE_NAME" \
+      #       --source-image-project="$GCP_ACCOUNT_ID" \
+      #       --project="$DEMO_GCP_ACCOUNT_ID" \
+      #       --description="Copied from DEV on $(date)"
