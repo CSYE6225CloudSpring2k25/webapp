@@ -1,11 +1,14 @@
 const express = require('express');
 const healthzRoute = require('./Routes/healthzroute');
+const fileRoute = require('./Routes/fileroute');
 const app = express();
 const { sequelize } = require('./Entities');
 
 app.use(express.json());
 
 app.use('/healthz', healthzRoute);
+app.use('/v1/file', fileRoute);
+
 if (process.env.NODE_ENV !== 'test') {
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

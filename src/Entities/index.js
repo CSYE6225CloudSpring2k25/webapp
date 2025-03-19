@@ -16,4 +16,25 @@ const HealthCheck = sequelize.define('HealthCheck', {
   
 });
 
-module.exports = { sequelize, HealthCheck };
+const File = sequelize.define('File', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  file_name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  url: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  upload_date: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  }
+}, { timestamps: false });
+
+module.exports = { sequelize, HealthCheck, File };
