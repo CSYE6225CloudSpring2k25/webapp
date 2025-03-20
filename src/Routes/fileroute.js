@@ -7,7 +7,12 @@ const router = express.Router();
 const s3 = new AWS.S3();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/', upload.single('profilePic'), async (req, res) => {
+router.post('/', upload.single('profilePic'), (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ error: 'Invalid field name. Use "profilePic" as the key' });
+  }
+  next(err);
+}, async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'profilePic required' });
   const fileName = req.file.originalname;
   const s3Key = `${Date.now()}-${fileName}`;
@@ -32,6 +37,9 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
+  if (Object.keys(req.query).length > 0) {
+    return res.status(400).json({ error: 'query parameters not allowed' });
+  }
   const file = await File.findByPk(req.params.id);
   if (!file) return res.status(404).json({ error: 'File not found' });
   res.status(200).json({
@@ -43,6 +51,9 @@ router.get('/:id', async (req, res) => {
 });
 
 router.delete('/:id', async (req, res) => {
+  if (Object.keys(req.query).length > 0) {
+    return res.status(400).json({ error: 'query parameters not allowed' });
+  }
   const file = await File.findByPk(req.params.id);
   if (!file) return res.status(404).json({ error: 'File not found' });
     const s3Key = decodeURIComponent(file.url.replace(`https://${process.env.S3_BUCKET}.s3.amazonaws.com/`, ''));
