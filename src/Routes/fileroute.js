@@ -13,6 +13,9 @@ router.post('/', upload.single('profilePic'), (err, req, res, next) => {
   }
   next(err);
 }, async (req, res) => {
+  if (Object.keys(req.query).length > 0) {
+    return res.status(400).json({ error: 'query parameters not allowed' });
+  }
   if (!req.file) return res.status(400).json({ error: 'profilePic required' });
   const fileName = req.file.originalname;
   const s3Key = `${Date.now()}-${fileName}`;
