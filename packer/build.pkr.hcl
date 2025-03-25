@@ -8,11 +8,20 @@ build {
     destination = "/tmp/app"
   }
 
+  provisioner "file" {
+    source      = "./src/cloudwatch-config.json"
+    destination = "/tmp/cloudwatch-config.json"
+  }
+
   # Provisioning the instance and creating .env 
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
       "sudo apt-get install -y nodejs npm",
+      "wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb -O /tmp/amazon-cloudwatch-agent.deb",
+      "[ -f /tmp/amazon-cloudwatch-agent.deb ] || { echo 'Failed to download CloudWatch Agent'; exit 1; }",
+      "sudo dpkg -i /tmp/amazon-cloudwatch-agent.deb || sudo apt-get install -f -y",
+      "sudo systemctl enable amazon-cloudwatch-agent",
       # "sudo apt-get install -y mysql-server nodejs npm",
       # "sudo systemctl enable mysql",
       # "sudo systemctl start mysql",
@@ -37,7 +46,10 @@ build {
       "sudo chmod -R 750 /opt/csye6225/webapp",
       "sudo cp /opt/csye6225/webapp/csye6225.service /etc/systemd/system/csye6225.service",
       "sudo systemctl daemon-reload",
-      "sudo systemctl enable csye6225.service"
+      "sudo systemctl enable csye6225.service",
+      "sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc",
+      "sudo mv /tmp/cloudwatch-config.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
+      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json || { echo 'Failed to configure CloudWatch Agent'; exit 1; }"
     ]
   }
 }
