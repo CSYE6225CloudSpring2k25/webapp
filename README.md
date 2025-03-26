@@ -7,6 +7,10 @@ This is a simple backend API for performing health checks using Node.js, Express
 ---
 
 ## **Prerequisites**
+
+
+
+
 Before running this project, ensure you have the following installed:
 
 1. **Node.js** (v16 or higher) and npm
