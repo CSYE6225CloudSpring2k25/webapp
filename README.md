@@ -4,6 +4,8 @@
 
 This is a simple backend API for performing health checks using Node.js, Express, and Sequelize. The `/healthz` endpoint monitors the application's health by validating database connectivity and handles various HTTP requests.
 
+
+
 ---
 
 ## **Prerequisites**
