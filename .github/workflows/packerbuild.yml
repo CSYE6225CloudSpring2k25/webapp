@@ -91,7 +91,7 @@ jobs:
             -var "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
             -var "instance_type=t2.micro" \
             -var "ami_users=[\"${{ secrets.AMI_USERS }}\"]" \
-            packer/ | grep -o 'ami-[0-9a-f]\{17\}')
+            packer/ | grep -o 'ami-[0-9a-f]\{17\}' | tail -n 1)
           if [ -z "$AMI_ID" ]; then
             echo "Error: Failed to extract AMI ID from Packer output."
             exit 1
