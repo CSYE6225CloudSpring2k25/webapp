@@ -138,6 +138,7 @@ jobs:
             exit 1
           fi
           echo "Launch Template ID: $LAUNCH_TEMPLATE_ID"
+          echo "launch-template-id=$LAUNCH_TEMPLATE_ID" >> $GITHUB_OUTPUT
 
           # Step 2: Retrieve Latest Launch Template Version
           LATEST_VERSION=$(aws ec2 describe-launch-template-versions \
@@ -176,7 +177,7 @@ jobs:
         run: |
           aws autoscaling update-auto-scaling-group \
             --auto-scaling-group-name csye6225_asg \
-            --launch-template "{\"LaunchTemplateId\":\"${LAUNCH_TEMPLATE_ID}\",\"Version\":\"${{ steps.update-lt.outputs.version }}\"}"
+            --launch-template LaunchTemplateId=${{ steps.update-lt.outputs.launch-template-id }},Version=${{ steps.update-lt.outputs.version }}
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
 
