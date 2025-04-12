@@ -16,7 +16,16 @@ build {
   # Provisioning the instance and creating .env 
   provisioner "shell" {
     inline = [
-      "sudo apt-get update",
+      "sudo apt-get update -y",
+      "sudo apt-get install -y unzip jq",
+
+      "if ! command -v aws &> /dev/null; then",
+      "  curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\"",
+      "  unzip awscliv2.zip",
+      "  sudo ./aws/install",
+      "  rm -rf awscliv2.zip aws",
+      "fi",
+      "aws --version",
       "sudo apt-get install -y nodejs npm",
       "wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb -O /tmp/amazon-cloudwatch-agent.deb",
       "[ -f /tmp/amazon-cloudwatch-agent.deb ] || { echo 'Failed to download CloudWatch Agent'; exit 1; }",
@@ -42,8 +51,8 @@ build {
       # Installing dependencies inside src/
       "cd /opt/csye6225/webapp",
       "sudo npm install",
-      "sudo chown -R csye6225:csye6225 /opt/csye6225/webapp",
-      "sudo chmod -R 750 /opt/csye6225/webapp",
+      "sudo chown -R csye6225:csye6225 /opt/csye6225",
+      "sudo chmod -R 750 /opt/csye6225",
       "sudo cp /opt/csye6225/webapp/csye6225.service /etc/systemd/system/csye6225.service",
       "sudo systemctl daemon-reload",
       "sudo systemctl enable csye6225.service",
