@@ -4,13 +4,13 @@ const fileRoute = require('./Routes/fileroute');
 const logger = require('./logger');
 const app = express();
 const { sequelize } = require('./Entities');
-// const cicdRoute = require('./Routes/cicdroute');
+const cicdRoute = require('./Routes/cicdroute');
 
 
 
 app.use(express.json());
 
-// app.use('/cicd', cicdRoute);
+app.use('/cicd', cicdRoute);
 app.use('/healthz', healthzRoute);
 app.use('/v1/file', fileRoute);
 
