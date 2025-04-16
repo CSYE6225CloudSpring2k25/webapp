@@ -1,4 +1,4 @@
-/* const express = require('express');
+const express = require('express');
 const { HealthCheck } = require('../Entities');
 const logger = require('../logger');
 const statsd = require('../metrics');
@@ -62,4 +62,4 @@ router.all('/', (req, res) => {
   res.status(405).send();
 });
 
-module.exports = router; */
+module.exports = router;
